@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Security Suite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="dashboard-body">
+    <div class="background-animation"></div>
+
+    <div class="dashboard-layout">
+        <aside class="sidebar glass">
+            <div class="sidebar-header">
+                <h2>Ultimate<br><span class="highlight">Security</span></h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-target="vault-section">📂 File Vault</a>
+                <a href="#" class="nav-item" data-target="chat-section">💬 Secret Chat</a>
+                <a href="#" class="nav-item" data-target="stego-section">🖼️ Steganography</a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="/logout" class="btn logout-btn outline-btn">🔒 Logout</a>
+            </div>
+        </aside>
+
+        <main class="content-area glass">
+            {% if not key_exists %}
+            <div id="key-setup-section" class="card key-banner">
+                <div class="icon-warning">⚠️</div>
+                <div class="key-banner-text">
+                    <h2>No Encryption Key Found</h2>
+                    <p>You must generate a secure local key before using the tools.</p>
+                </div>
+                <button id="generate-key-btn" class="btn primary-btn">Generate Key</button>
+                <div id="key-status-msg"></div>
+            </div>
+            {% endif %}
+
+            <div id="main-tools" class="{% if not key_exists %}hidden{% endif %}">
+                
+                <!-- FILE VAULT -->
+                <section id="vault-section" class="tool-section active">
+                    <header class="section-header">
+                        <h2>File Vault</h2>
+                        <p>Encrypt files with AES-256. Use the Shredder to securely wipe originals.</p>
+                    </header>
+                    <div class="mode-toggle">
+                        <input type="radio" id="mode-encrypt" name="mode" value="encrypt" checked>
+                        <label for="mode-encrypt" class="toggle-label encrypt-label">Encrypt</label>
+                        
+                        <input type="radio" id="mode-decrypt" name="mode" value="decrypt">
+                        <label for="mode-decrypt" class="toggle-label decrypt-label">Decrypt</label>
+                        <div class="toggle-slider"></div>
+                    </div>
+
+                    <div class="shredder-option" id="shredder-container">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="shred-checkbox">
+                            <span class="checkmark"></span>
+                            Securely shred original file after encryption (Unrecoverable)
+                        </label>
+                    </div>
+
+                    <div class="drop-zone" id="drop-zone">
+                        <div class="drop-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <span class="drop-title">Drag & Drop files here</span>
+                        <input type="file" id="file-input" class="hidden" />
+                    </div>
+                    <div id="upload-status" class="status-message hidden">
+                        <div class="spinner"></div><span>Processing...</span>
+                    </div>
+                    <div id="error-message" class="error-message hidden"></div>
+                </section>
+
+                <!-- SECRET CHAT -->
+                <section id="chat-section" class="tool-section hidden">
+                    <header class="section-header">
+                        <h2>Secret Chat</h2>
+                        <p>Encrypt raw text messages into a secure cipher block.</p>
+                    </header>
+                    <div class="chat-container">
+                        <textarea id="chat-input" class="input-field textarea-field" placeholder="Enter text to encrypt or cipher-text to decrypt..."></textarea>
+                        <div class="action-buttons">
+                            <button id="chat-encrypt-btn" class="btn primary-btn">Encrypt</button>
+                            <button id="chat-decrypt-btn" class="btn outline-btn">Decrypt</button>
+                        </div>
+                        <div id="chat-result-container" class="hidden">
+                            <label class="result-label">Result:</label>
+                            <textarea id="chat-result" class="input-field textarea-field result-field" readonly></textarea>
+                        </div>
+                        <div id="chat-error" class="error-message hidden"></div>
+                    </div>
+                </section>
+
+                <!-- STEGANOGRAPHY -->
+                <section id="stego-section" class="tool-section hidden">
+                    <header class="section-header">
+                        <h2>Steganography</h2>
+                        <p>Hide secret text inside a PNG image.</p>
+                    </header>
+                    <div class="stego-container">
+                        <div class="stego-mode-toggle">
+                            <button class="stego-tab active" data-action="hide">Hide Data</button>
+                            <button class="stego-tab outline-btn" data-action="extract" style="border:none; color:var(--text-muted)">Extract Data</button>
+                        </div>
+                        
+                        <div class="stego-content mt-4">
+                            <div class="input-group">
+                                <label>1. Upload PNG Image:</label>
+                                <input type="file" id="stego-image" accept="image/png" class="input-file">
+                            </div>
+                            
+                            <div id="stego-text-group" class="input-group mt-3">
+                                <label>2. Secret Text to Hide:</label>
+                                <textarea id="stego-text" class="input-field textarea-field sm" placeholder="Enter secret message..."></textarea>
+                            </div>
+                            
+                            <button id="stego-action-btn" class="btn primary-btn w-full mt-4">Hide & Download</button>
+                            
+                            <div id="stego-status" class="status-message hidden mt-3"></div>
+                            
+                            <div id="stego-result-group" class="input-group mt-4 hidden">
+                                <label>Extracted Secret:</label>
+                                <textarea id="stego-extracted-text" class="input-field textarea-field" readonly></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# Ignore the secret key and config to prevent accidental pushes to version control
+secret.key
+config.json
+
+# Python specifics
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+ENV/

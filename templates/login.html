@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Ultimate Security</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="login-body">
+    <div class="background-animation"></div>
+    <div class="container glass login-glass">
+        <header>
+            <div class="lock-icon">🔒</div>
+            <h1>Ultimate <span class="highlight">Security</span></h1>
+            {% if is_setup_needed %}
+            <p>Welcome. Please set a Master Password to protect this application.</p>
+            {% else %}
+            <p>Enter your Master Password to unlock the vault.</p>
+            {% endif %}
+        </header>
+
+        <div class="login-form">
+            <input type="password" id="password" placeholder="Master Password" class="input-field" autofocus>
+            {% if is_setup_needed %}
+            <button id="auth-btn" class="btn primary-btn w-full" data-action="setup">Set Password</button>
+            {% else %}
+            <button id="auth-btn" class="btn primary-btn w-full" data-action="login">Unlock Vault</button>
+            {% endif %}
+            <div id="auth-error" class="error-message hidden"></div>
+        </div>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>
