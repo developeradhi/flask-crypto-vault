@@ -3,33 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Ultimate Security</title>
+    <title>Ultimate Security Suite - Auth</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=2">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.4.2/zxcvbn.js"></script>
 </head>
 <body class="login-body">
     <div class="background-animation"></div>
-    <div class="container glass login-glass">
-        <header>
-            <div class="lock-icon">🔒</div>
-            <h1>Ultimate <span class="highlight">Security</span></h1>
-            {% if is_setup_needed %}
-            <p>Welcome. Please set a Master Password to protect this application.</p>
-            {% else %}
-            <p>Enter your Master Password to unlock the vault.</p>
+    <div class="glass login-glass">
+        <div class="lock-icon">🛡️</div>
+        <h2 style="font-weight: 800; font-size: 2rem;">
+            {% if mode == 'register' %}Create Account{% else %}Welcome Back{% endif %}
+        </h2>
+        <p style="color: var(--text-muted); margin-top: 5px;">
+            {% if mode == 'register' %}Join the public zero-trust platform.{% else %}Securely access your vault.{% endif %}
+        </p>
+        
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="error-message" style="margin-bottom: 15px;">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        
+        <form id="auth-form" class="login-form">
+            <input type="text" id="username" class="input-field" placeholder="Username" required>
+            {% if mode == 'register' %}
+            <input type="email" id="email" class="input-field" placeholder="Email Address" style="margin-top: -5px;" required>
             {% endif %}
-        </header>
+            <input type="password" id="password" class="input-field" placeholder="Password" required>
+            
+            {% if mode == 'register' %}
+            <div id="password-strength-container" style="text-align: left; margin-bottom: 15px; display: none;">
+                <div style="height: 5px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden;">
+                    <div id="password-strength-bar" style="height: 100%; width: 0%; background: #ef4444; transition: 0.3s;"></div>
+                </div>
+                <div id="password-crack-time" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;"></div>
+            </div>
+            {% endif %}
+            
+            <button type="button" id="auth-btn" class="btn primary-btn w-full mt-3" data-action="{{ mode }}">
+                {% if mode == 'login' %}Login{% else %}Register & Generate Keys{% endif %}
+            </button>
+            <p id="auth-error" class="error-message hidden"></p>
+        </form>
+        
+        <div style="margin-top: 20px; border-top: 1px solid var(--glass-border); padding-top: 20px;">
+            <a href="/login/google" class="btn outline-btn w-full" style="text-decoration: none; display: inline-block;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="G" style="width: 16px; vertical-align: middle; margin-right: 8px;">
+                Sign in with Google
+            </a>
+        </div>
+        
+        {% if mode == 'login' %}
+        <div style="margin-top: 15px;">
+            <a href="/forgot-password" style="color: var(--text-muted); font-size: 0.85rem; text-decoration: none;">Forgot Password?</a>
+        </div>
+        {% endif %}
 
-        <div class="login-form">
-            <input type="password" id="password" placeholder="Master Password" class="input-field" autofocus>
-            {% if is_setup_needed %}
-            <button id="auth-btn" class="btn primary-btn w-full" data-action="setup">Set Password</button>
+        <div style="margin-top: 20px; font-size: 0.9rem;">
+            {% if mode == 'register' %}
+            <span style="color: var(--text-muted);">Already have an account?</span> <a href="/login" style="color: var(--accent-cyan); text-decoration: none; font-weight: 600;">Login here</a>
             {% else %}
-            <button id="auth-btn" class="btn primary-btn w-full" data-action="login">Unlock Vault</button>
+            <span style="color: var(--text-muted);">New to the platform?</span> <a href="/register" style="color: var(--accent-cyan); text-decoration: none; font-weight: 600;">Register publicly</a>
             {% endif %}
-            <div id="auth-error" class="error-message hidden"></div>
         </div>
     </div>
-    <script src="/static/script.js"></script>
+    <script src="/static/script.js?v=2"></script>
 </body>
 </html>

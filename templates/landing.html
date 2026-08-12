@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Security Suite | RootNode-Rebels</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=3">
+    <style>
+        .landing-body {
+            overflow-y: auto;
+            align-items: flex-start;
+            padding: 0;
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+        }
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin-bottom: 40px;
+        }
+        
+        /* Floating Orbs for "Vibe" */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            animation: float 10s ease-in-out infinite alternate;
+        }
+        .orb-1 {
+            width: 300px; height: 300px;
+            background: rgba(6, 182, 212, 0.4);
+            top: 20%; left: 10%;
+        }
+        .orb-2 {
+            width: 400px; height: 400px;
+            background: rgba(139, 92, 246, 0.3);
+            bottom: 10%; right: 10%;
+            animation-delay: -5s;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0) translateX(0); }
+            100% { transform: translateY(-50px) translateX(50px); }
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 100px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .features-header {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 60px;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.2);
+            border-color: var(--accent-cyan);
+        }
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            color: white;
+        }
+        .feature-desc {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        .landing-footer {
+            padding: 40px 20px;
+            text-align: center;
+            border-top: 1px solid var(--glass-border);
+            margin-top: 50px;
+            background: rgba(0,0,0,0.3);
+        }
+        .creator-badge {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(6,182,212,0.1), rgba(139,92,246,0.1));
+            border: 1px solid var(--accent-purple);
+            border-radius: 50px;
+            text-decoration: none;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .creator-badge:hover {
+            background: linear-gradient(135deg, rgba(6,182,212,0.3), rgba(139,92,246,0.3));
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(139,92,246,0.5);
+        }
+
+    </style>
+</head>
+<body class="landing-body">
+    <div class="background-animation"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <!-- HERO -->
+    <header class="hero">
+        <div style="display: inline-block; padding: 8px 16px; background: rgba(255,255,255,0.05); border-radius: 30px; border: 1px solid var(--glass-border); color: var(--accent-cyan); font-weight: 600; font-size: 0.9rem; margin-bottom: 20px;">v2.0 Enterprise Release</div>
+        <h1 class="hero-title">The Ultimate <br><span class="highlight">Security Suite</span></h1>
+        <p class="hero-subtitle">Military-grade AES encryption, AI-driven Data Loss Prevention, and Snapchat-style Ephemeral messaging, all wrapped in a gorgeous zero-trust glassmorphism interface.</p>
+        
+        <div style="display: flex; gap: 20px;">
+            <a href="/login" class="btn primary-btn" style="text-decoration: none; font-size: 1.1rem; padding: 15px 30px;">Enter The Vault ➔</a>
+            <a href="/register" class="btn outline-btn" style="text-decoration: none; font-size: 1.1rem; padding: 15px 30px;">Register Publicly</a>
+        </div>
+    </header>
+
+    <!-- FEATURES -->
+    <section class="features-section">
+        <h2 class="features-header">Massive Arsenal of <span class="highlight">Features</span></h2>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔥</div>
+                <h3 class="feature-title">Burn-Notes</h3>
+                <p class="feature-desc">Generate one-time encrypted links. The moment your recipient reads the message, it is mathematically obliterated from our servers forever.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3 class="feature-title">AI Password Entropy</h3>
+                <p class="feature-desc">Powered by Dropbox's zxcvbn engine. Our registration page tells you exactly how many centuries a hacker's supercomputer would need to crack your password.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3 class="feature-title">DLP AI Scanner</h3>
+                <p class="feature-desc">Active Data Loss Prevention. Type a Credit Card or SSN, and our Regex-Engine will instantly warn you before you accidentally leak PII.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📜</div>
+                <h3 class="feature-title">Enterprise Audit Logs</h3>
+                <p class="feature-desc">Complete zero-trust transparency. The system tracks the exact timestamp, IP address, and User-Agent for every login attempt on your account.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔑</div>
+                <h3 class="feature-title">RSA Digital Signatures</h3>
+                <p class="feature-desc">Asymmetric Cryptography built-in. Sign messages with your Private Key, and let the world mathematically verify it with your Public Key.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3 class="feature-title">Aesthetic Themes</h3>
+                <p class="feature-desc">Security doesn't have to be ugly. Switch between Glassmorphism, Cyberpunk Neon, and retro Vaporwave themes dynamically.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="landing-footer">
+        <div style="margin-bottom: 20px;">
+            <a href="https://github.com/rootnode-rebels/" target="_blank" class="creator-badge">
+                👨‍💻 Created by RootNode-Rebels
+            </a>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">The most advanced Gen-Z cybersecurity project.</p>
+    </footer>
+
+</body>
+</html>

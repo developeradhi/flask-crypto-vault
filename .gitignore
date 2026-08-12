@@ -1,13 +1,32 @@
-# Ignore the secret key and config to prevent accidental pushes to version control
-secret.key
-config.json
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
-# Python specifics
+# SQLite databases
+instance/
+*.sqlite3
+*.db
+users.db
+users_v2.db
+
+# Generated presentations and test assets
+*.pptx
+test_*.png
+
+# Python artifacts
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
 
-# Virtual environment
-venv/
-env/
-ENV/
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# VSCode/IDE
+.vscode/
+.idea/

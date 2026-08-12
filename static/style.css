@@ -9,6 +9,28 @@
     --text-muted: #94a3b8;
 }
 
+body.theme-cyberpunk {
+    --bg-dark: #050505;
+    --glass-bg: rgba(10, 10, 10, 0.8);
+    --glass-border: #fcee0a;
+    --accent-blue: #fcee0a;
+    --accent-cyan: #00ff00;
+    --accent-purple: #ff003c;
+    --text-main: #fcee0a;
+    --text-muted: #d1c500;
+}
+
+body.theme-vaporwave {
+    --bg-dark: #2b00ff;
+    --glass-bg: rgba(255, 0, 255, 0.3);
+    --glass-border: #00ffff;
+    --accent-blue: #ff00ff;
+    --accent-cyan: #00ffff;
+    --accent-purple: #ffb8ff;
+    --text-main: #00ffff;
+    --text-muted: #ffb8ff;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -259,12 +281,6 @@ body {
 .result-label { display: block; margin-bottom: 8px; font-weight: 600; }
 .result-field { background: rgba(0,0,0,0.4); color: var(--accent-cyan); }
 
-/* Steganography Tools */
-.stego-mode-toggle { display: flex; gap: 10px; margin-bottom: 20px; }
-.stego-tab { flex: 1; padding: 12px; background: transparent; border: 1px solid var(--glass-border); border-radius: 12px; color: white; cursor: pointer; transition: 0.3s; }
-.stego-tab.active { background: var(--accent-blue); border-color: var(--accent-blue); }
-.input-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.95rem; }
-.input-file { width: 100%; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--glass-border); color: white; }
 
 /* Key Setup Banner */
 .key-banner { display: flex; align-items: center; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 20px; border-radius: 16px; margin-bottom: 30px; }

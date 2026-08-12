@@ -1,42 +1,139 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Helper: Show Error
+    // ==========================================
+    // AUTO-LOCK (IDLE DETECTION)
+    // ==========================================
+    let idleTime = 0;
+    const idleTimeout = 3 * 60; // 3 minutes in seconds
+    
+    // Only apply idle detection if we are on the dashboard (not login screen)
+    if(document.getElementById('main-tools')) {
+        const resetIdle = () => { idleTime = 0; };
+        window.addEventListener('mousemove', resetIdle);
+        window.addEventListener('keypress', resetIdle);
+        window.addEventListener('scroll', resetIdle);
+        
+        setInterval(() => {
+            idleTime++;
+            if(idleTime >= idleTimeout && !document.getElementById('lock-overlay')) {
+                // Trigger Lock
+                const overlay = document.createElement('div');
+                overlay.id = 'lock-overlay';
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0'; overlay.style.left = '0'; overlay.style.width = '100%'; overlay.style.height = '100%';
+                overlay.style.backdropFilter = 'blur(20px)';
+                overlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
+                overlay.style.zIndex = '9999';
+                overlay.style.display = 'flex'; overlay.style.flexDirection = 'column'; overlay.style.justifyContent = 'center'; overlay.style.alignItems = 'center';
+                
+                overlay.innerHTML = `
+                    <h2 style="font-size: 2.5rem; margin-bottom: 20px; font-weight: 800;">🔒 Vault Locked</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 30px;">You were idle for 3 minutes. Please unlock to continue.</p>
+                    <input type="password" id="unlock-pwd" class="input-field" placeholder="Enter Password" style="max-width: 300px;">
+                    <button id="unlock-btn" class="btn primary-btn mt-3" style="max-width: 300px;">Unlock</button>
+                    <p id="unlock-error" class="error-message hidden" style="max-width: 300px;"></p>
+                `;
+                document.body.appendChild(overlay);
+                
+                document.getElementById('unlock-btn').addEventListener('click', async () => {
+                    const pwd = document.getElementById('unlock-pwd').value;
+                    const errEl = document.getElementById('unlock-error');
+                    // Simple check against backend
+                    try {
+                        const res = await fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ username: document.querySelector('.sidebar-header strong').innerText, password: pwd })
+                        });
+                        if(res.ok) {
+                            document.body.removeChild(overlay);
+                            resetIdle();
+                        } else {
+                            errEl.innerText = "Incorrect Password";
+                            errEl.classList.remove('hidden');
+                        }
+                    } catch(e) {}
+                });
+            }
+        }, 1000);
+    }
+
     function showError(el, msg) {
         el.innerText = msg;
         el.classList.remove('hidden');
     }
 
     // ==========================================
-    // AUTHENTICATION LOGIC
+    // AUTHENTICATION LOGIC & ZXCVBN
     // ==========================================
+    const pwdInput = document.getElementById('password');
+    if (pwdInput && document.getElementById('password-strength-container')) {
+        pwdInput.addEventListener('input', () => {
+            const val = pwdInput.value;
+            const container = document.getElementById('password-strength-container');
+            if(!val) { container.style.display = 'none'; return; }
+            container.style.display = 'block';
+            
+            const result = zxcvbn(val);
+            const bar = document.getElementById('password-strength-bar');
+            const timeLabel = document.getElementById('password-crack-time');
+            
+            const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e'];
+            bar.style.width = ((result.score + 1) * 20) + '%';
+            bar.style.background = colors[result.score];
+            timeLabel.innerText = "Crack time: " + result.crack_times_display.offline_slow_hashing_1e4_per_second;
+        });
+    }
+
     const authBtn = document.getElementById('auth-btn');
     if (authBtn) {
         authBtn.addEventListener('click', async () => {
+            const username = document.getElementById('username').value;
             const pwd = document.getElementById('password').value;
             const errEl = document.getElementById('auth-error');
-            const action = authBtn.dataset.action;
+            const action = authBtn.dataset.action || (document.getElementById('email') ? 'register' : 'login');
             
-            if (!pwd) { showError(errEl, 'Password is required.'); return; }
+            let email = '';
+            if (action === 'register') {
+                const emailInput = document.getElementById('email');
+                if (emailInput) {
+                    email = emailInput.value.trim();
+                    if (!email) { showError(errEl, 'Email is required.'); return; }
+                }
+            }
+            
+            if (!username || !pwd) { showError(errEl, 'Username and password required.'); return; }
             
             errEl.classList.add('hidden');
             authBtn.disabled = true;
             authBtn.innerText = 'Processing...';
 
             try {
-                const endpoint = action === 'setup' ? '/api/auth/setup' : '/api/auth/login';
+                const endpoint = action === 'register' ? '/api/auth/register' : '/api/auth/login';
+                
+                let bodyData = { username, password: pwd };
+                if (action === 'register') {
+                    const emailInput = document.getElementById('email');
+                    if (emailInput) bodyData.email = emailInput.value.trim();
+                }
+                
                 const res = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: pwd })
+                    body: JSON.stringify(bodyData)
                 });
                 const data = await res.json();
                 
                 if (res.ok) {
-                    window.location.href = '/';
+                    if (data.requires_2fa) {
+                        window.location.href = '/2fa';
+                    } else {
+                        window.location.href = '/';
+                    }
                 } else {
                     showError(errEl, data.error || 'Authentication failed');
                     authBtn.disabled = false;
-                    authBtn.innerText = action === 'setup' ? 'Set Password' : 'Unlock Vault';
+                    authBtn.innerText = action === 'register' ? 'Register & Generate Keys' : 'Login';
                 }
             } catch (e) {
                 showError(errEl, 'Server connection error.');
@@ -66,24 +163,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================
-    // KEY GENERATION
+    // THEME SWITCHER
     // ==========================================
-    const genKeyBtn = document.getElementById('generate-key-btn');
-    if (genKeyBtn) {
-        genKeyBtn.addEventListener('click', async () => {
-            genKeyBtn.disabled = true;
-            genKeyBtn.innerText = 'Generating...';
-            try {
-                const res = await fetch('/api/generate-key', { method: 'POST' });
-                const data = await res.json();
-                if (data.success) {
-                    location.reload(); // Reload to show main tools
-                } else {
-                    document.getElementById('key-status-msg').innerText = data.message;
-                    genKeyBtn.disabled = false;
-                }
-            } catch (e) {
-                genKeyBtn.disabled = false;
+    const themeSwitcher = document.getElementById('theme-switcher');
+    if(themeSwitcher) {
+        themeSwitcher.addEventListener('change', (e) => {
+            document.body.className = 'dashboard-body';
+            if(e.target.value !== 'glass') {
+                document.body.classList.add(`theme-${e.target.value}`);
             }
         });
     }
@@ -99,7 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const shredContainer = document.getElementById('shredder-container');
 
     if (dropZone) {
-        // Toggle shredder visibility based on mode
         modeRadios.forEach(radio => {
             radio.addEventListener('change', (e) => {
                 if(e.target.value === 'encrypt') shredContainer.classList.remove('hidden');
@@ -167,12 +253,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatResultCont = document.getElementById('chat-result-container');
     const chatResult = document.getElementById('chat-result');
     const chatError = document.getElementById('chat-error');
-    const copyBtn = document.getElementById('copy-btn');
 
     async function handleTextProcess(action) {
         const text = chatInput.value.trim();
         if(!text) return;
         chatError.classList.add('hidden');
+        
+        // DLP SCANNER (Data Loss Prevention)
+        if(action === 'encrypt') {
+            const ccRegex = /\b(?:\d[ -]*?){13,16}\b/g;
+            const ssnRegex = /\b\d{3}-\d{2}-\d{4}\b/g;
+            const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+            
+            let warnings = [];
+            if(ccRegex.test(text)) warnings.push("Credit Card Number");
+            if(ssnRegex.test(text)) warnings.push("Social Security Number");
+            if(emailRegex.test(text)) warnings.push("Email Address");
+            
+            if(warnings.length > 0) {
+                const proceed = confirm(`DLP WARNING:\nWe detected sensitive information (${warnings.join(', ')}) in your text.\nAre you sure you want to encrypt and share this?`);
+                if(!proceed) return;
+            }
+        }
         try {
             const res = await fetch('/api/text', {
                 method: 'POST',
@@ -191,105 +293,207 @@ document.addEventListener('DOMContentLoaded', () => {
             showError(chatError, 'Connection error');
         }
     }
-
     if(chatEncryptBtn) chatEncryptBtn.addEventListener('click', () => handleTextProcess('encrypt'));
     if(chatDecryptBtn) chatDecryptBtn.addEventListener('click', () => handleTextProcess('decrypt'));
-    if(copyBtn) {
-        copyBtn.addEventListener('click', () => {
-            chatResult.select();
-            document.execCommand('copy');
-            copyBtn.innerText = 'Copied!';
-            setTimeout(() => copyBtn.innerText = 'Copy to Clipboard', 2000);
+
+    // ==========================================
+    // BURN-NOTE (EPHEMERAL MESSAGES)
+    // ==========================================
+    const burnCreateBtn = document.getElementById('burn-create-btn');
+    if(burnCreateBtn) {
+        burnCreateBtn.addEventListener('click', async () => {
+            const text = document.getElementById('burn-input').value.trim();
+            const err = document.getElementById('burn-error');
+            const resCont = document.getElementById('burn-result-container');
+            const urlInput = document.getElementById('burn-url');
+            if(!text) return;
+            
+            err.classList.add('hidden');
+            burnCreateBtn.disabled = true;
+            burnCreateBtn.innerText = 'Generating...';
+            
+            try {
+                const res = await fetch('/api/burn/create', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text})
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    urlInput.value = data.url;
+                    resCont.classList.remove('hidden');
+                } else {
+                    showError(err, data.error);
+                }
+            } catch(e) {
+                showError(err, "Connection error.");
+            }
+            burnCreateBtn.disabled = false;
+            burnCreateBtn.innerText = 'Generate Burn Link';
         });
     }
 
     // ==========================================
-    // STEGANOGRAPHY
+    // RSA DIGITAL SIGNATURES
     // ==========================================
-    const stegoTabs = document.querySelectorAll('.stego-tab');
-    const stegoTextGroup = document.getElementById('stego-text-group');
-    const stegoResultGroup = document.getElementById('stego-result-group');
-    const stegoActionBtn = document.getElementById('stego-action-btn');
-    const stegoImage = document.getElementById('stego-image');
-    const stegoText = document.getElementById('stego-text');
-    const stegoExtracted = document.getElementById('stego-extracted-text');
-    const stegoStatus = document.getElementById('stego-status');
-    let currentStegoAction = 'hide';
+    const rsaSignBtn = document.getElementById('rsa-sign-btn');
+    const rsaVerifyBtn = document.getElementById('rsa-verify-btn');
+    const rsaInput = document.getElementById('rsa-input');
+    const rsaSignature = document.getElementById('rsa-signature');
+    const rsaResultCont = document.getElementById('rsa-result-container');
+    const rsaResult = document.getElementById('rsa-result');
+    const rsaError = document.getElementById('rsa-error');
 
-    if(stegoTabs.length > 0) {
-        stegoTabs.forEach(tab => {
+    async function handleRsaProcess(action) {
+        const message = rsaInput.value.trim();
+        if(!message) return;
+        rsaError.classList.add('hidden');
+        
+        let payload = { action, message };
+        if (action === 'verify') {
+            payload.signature = rsaSignature.value.trim();
+            if(!payload.signature) { showError(rsaError, "Signature is required for verification"); return; }
+        }
+
+        try {
+            const res = await fetch('/api/rsa', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if(res.ok) {
+                rsaResult.value = data.result;
+                rsaResultCont.classList.remove('hidden');
+            } else {
+                showError(rsaError, data.error);
+                rsaResultCont.classList.add('hidden');
+            }
+        } catch(e) {
+            showError(rsaError, 'Connection error');
+        }
+    }
+    if(rsaSignBtn) rsaSignBtn.addEventListener('click', () => handleRsaProcess('sign'));
+    if(rsaVerifyBtn) rsaVerifyBtn.addEventListener('click', () => handleRsaProcess('verify'));
+
+    // ==========================================
+    // HMAC FILE INTEGRITY
+    // ==========================================
+    const hmacTabs = document.querySelectorAll('.hmac-tab');
+    const hmacHashGroup = document.getElementById('hmac-hash-group');
+    const hmacActionBtn = document.getElementById('hmac-action-btn');
+    const hmacFile = document.getElementById('hmac-file');
+    const hmacExpected = document.getElementById('hmac-expected');
+    const hmacStatus = document.getElementById('hmac-status');
+    let currentHmacAction = 'generate';
+
+    if(hmacTabs.length > 0) {
+        hmacTabs.forEach(tab => {
             tab.addEventListener('click', () => {
-                stegoTabs.forEach(t => { t.classList.remove('active'); t.style.border='none'; t.style.color='var(--text-muted)'; });
+                hmacTabs.forEach(t => { t.classList.remove('active'); t.style.border='none'; t.style.color='var(--text-muted)'; });
                 tab.classList.add('active');
                 tab.style.color='white';
                 
-                currentStegoAction = tab.dataset.action;
-                stegoStatus.classList.add('hidden');
+                currentHmacAction = tab.dataset.action;
+                hmacStatus.classList.add('hidden');
                 
-                if(currentStegoAction === 'hide') {
-                    stegoTextGroup.classList.remove('hidden');
-                    stegoResultGroup.classList.add('hidden');
-                    stegoActionBtn.innerText = 'Hide & Download';
+                if(currentHmacAction === 'generate') {
+                    hmacHashGroup.classList.add('hidden');
+                    hmacActionBtn.innerText = 'Generate Hash';
                 } else {
-                    stegoTextGroup.classList.add('hidden');
-                    stegoResultGroup.classList.add('hidden');
-                    stegoActionBtn.innerText = 'Extract Data';
+                    hmacHashGroup.classList.remove('hidden');
+                    hmacActionBtn.innerText = 'Verify File';
                 }
             });
         });
 
-        stegoActionBtn.addEventListener('click', async () => {
-            if(!stegoImage.files[0]) {
-                showError(stegoStatus, 'Please select a PNG image.');
+        hmacActionBtn.addEventListener('click', async () => {
+            if(!hmacFile.files[0]) {
+                showError(hmacStatus, 'Please select a file.');
                 return;
             }
-            if(currentStegoAction === 'hide' && !stegoText.value.trim()) {
-                showError(stegoStatus, 'Please enter text to hide.');
+            if(currentHmacAction === 'verify' && !hmacExpected.value.trim()) {
+                showError(hmacStatus, 'Please enter the expected hash.');
                 return;
             }
 
-            stegoStatus.classList.add('hidden');
-            stegoResultGroup.classList.add('hidden');
-            stegoActionBtn.disabled = true;
-            stegoActionBtn.innerText = 'Processing...';
+            hmacStatus.classList.add('hidden');
+            hmacActionBtn.disabled = true;
+            hmacActionBtn.innerText = 'Processing...';
 
             const formData = new FormData();
-            formData.append('image', stegoImage.files[0]);
-            formData.append('action', currentStegoAction);
-            if(currentStegoAction === 'hide') formData.append('text', stegoText.value);
+            formData.append('file', hmacFile.files[0]);
+            formData.append('action', currentHmacAction);
+            if(currentHmacAction === 'verify') formData.append('hmac', hmacExpected.value.trim());
 
             try {
-                const response = await fetch('/api/stego', { method: 'POST', body: formData });
+                const response = await fetch('/api/hmac', { method: 'POST', body: formData });
+                const data = await response.json();
                 
-                if(currentStegoAction === 'hide') {
-                    if(!response.ok) {
-                        const err = await response.json();
-                        throw new Error(err.error);
-                    }
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none'; a.href = url; a.download = 'secret_' + stegoImage.files[0].name;
-                    document.body.appendChild(a); a.click(); window.URL.revokeObjectURL(url);
-                    
-                    stegoStatus.innerHTML = '<span style="color: #4ade80">✓ Image downloaded!</span>';
-                    stegoStatus.classList.remove('hidden');
-                } else {
-                    const data = await response.json();
-                    if(response.ok) {
-                        stegoExtracted.value = data.result;
-                        stegoResultGroup.classList.remove('hidden');
+                if(response.ok) {
+                    if (currentHmacAction === 'generate') {
+                        hmacStatus.innerHTML = `<span style="color: #4ade80">Generated HMAC:</span><br><code style="background: rgba(0,0,0,0.5); padding: 5px; border-radius: 4px;">${data.result}</code>`;
                     } else {
-                        throw new Error(data.error);
+                        hmacStatus.innerHTML = `<span style="color: #4ade80">✓ ${data.result}</span>`;
                     }
+                } else {
+                    hmacStatus.innerHTML = `<span style="color: #ef4444">❌ ${data.error}</span>`;
                 }
+                hmacStatus.classList.remove('hidden');
             } catch (err) {
-                stegoStatus.innerHTML = `<span style="color: #ef4444">${err.message}</span>`;
-                stegoStatus.classList.remove('hidden');
+                hmacStatus.innerHTML = `<span style="color: #ef4444">Connection Error</span>`;
+                hmacStatus.classList.remove('hidden');
             }
+            hmacActionBtn.disabled = false;
+            hmacActionBtn.innerText = currentHmacAction === 'generate' ? 'Generate Hash' : 'Verify File';
+        });
+    }
+
+    // ==========================================
+    // 2FA SETUP
+    // ==========================================
+    const setup2FaBtn = document.getElementById('setup-2fa-btn');
+    if(setup2FaBtn) {
+        setup2FaBtn.addEventListener('click', async () => {
+            setup2FaBtn.disabled = true;
+            try {
+                const res = await fetch('/api/auth/enable-2fa', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({}) });
+                const data = await res.json();
+                if(res.ok) {
+                    document.getElementById('2fa-setup-area').classList.remove('hidden');
+                    setup2FaBtn.classList.add('hidden');
+                    
+                    // Generate QR
+                    new QRCode(document.getElementById("qrcode"), {
+                        text: data.uri,
+                        width: 150,
+                        height: 150
+                    });
+                }
+            } catch(e) {}
+        });
+    }
+
+    const enable2FaBtn = document.getElementById('enable-2fa-btn');
+    if(enable2FaBtn) {
+        enable2FaBtn.addEventListener('click', async () => {
+            const code = document.getElementById('2fa-verify-code').value;
+            const errEl = document.getElementById('2fa-setup-error');
+            if(!code) return;
             
-            stegoActionBtn.disabled = false;
-            stegoActionBtn.innerText = currentStegoAction === 'hide' ? 'Hide & Download' : 'Extract Data';
+            try {
+                const res = await fetch('/api/auth/enable-2fa', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ code })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    location.reload(); // Reload to show 2FA as enabled
+                } else {
+                    showError(errEl, data.error);
+                }
+            } catch(e) {}
         });
     }
 

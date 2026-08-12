@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burn After Reading</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=2">
+    <style>
+        .burn-container {
+            max-width: 600px;
+            margin: 50px auto;
+            text-align: center;
+        }
+        .burn-fire {
+            font-size: 5rem;
+            animation: flicker 1s infinite alternate;
+        }
+        @keyframes flicker {
+            0% { opacity: 0.8; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1.05); }
+        }
+        .burn-message {
+            background: rgba(0,0,0,0.5);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid #ef4444;
+            margin-top: 20px;
+            font-size: 1.2rem;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-animation"></div>
+    <div class="glass burn-container">
+        <div class="burn-fire">🔥</div>
+        <h2 style="color: #ef4444; font-weight: 800;">Burn After Reading</h2>
+        
+        {% if error %}
+            <p style="color: var(--text-muted); margin-top: 15px;">{{ error }}</p>
+        {% else %}
+            <p style="color: var(--text-muted); margin-top: 15px;">This message has now been permanently deleted from our servers. Save it now if you need it.</p>
+            <div class="burn-message">
+                {{ message }}
+            </div>
+        {% endif %}
+        
+        <a href="/" class="btn outline-btn" style="display: inline-block; margin-top: 30px; text-decoration: none;">Return to Dashboard</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Factor Authentication</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=2">
+</head>
+<body class="login-body">
+    <div class="background-animation"></div>
+    <div class="glass login-glass">
+        <div class="lock-icon">🔐</div>
+        <h2 style="font-weight: 800; font-size: 2rem;">2FA Required</h2>
+        <p style="color: var(--text-muted); margin-top: 10px;">Please enter the 6-digit code from your Google Authenticator app.</p>
+        
+        <div class="login-form">
+            <input type="text" id="2fa-code" class="input-field" placeholder="000000" maxlength="6" autocomplete="off" style="text-align: center; font-size: 1.5rem; letter-spacing: 5px;">
+            <button id="verify-2fa-btn" class="btn primary-btn w-full mt-3">Verify & Enter</button>
+            <div id="2fa-error" class="error-message hidden"></div>
+        </div>
+        <div style="margin-top: 20px;">
+            <a href="/logout" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">Cancel</a>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('verify-2fa-btn').addEventListener('click', async () => {
+            const code = document.getElementById('2fa-code').value;
+            const errEl = document.getElementById('2fa-error');
+            
+            if(!code || code.length !== 6) {
+                errEl.innerText = "Please enter a valid 6-digit code.";
+                errEl.classList.remove('hidden');
+                return;
+            }
+            
+            errEl.classList.add('hidden');
+            const btn = document.getElementById('verify-2fa-btn');
+            btn.disabled = true;
+            btn.innerText = "Verifying...";
+            
+            try {
+                const res = await fetch('/api/auth/verify-2fa', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({code})
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    window.location.href = '/';
+                } else {
+                    errEl.innerText = data.error;
+                    errEl.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.innerText = "Verify & Enter";
+                }
+            } catch(e) {
+                errEl.innerText = "Connection error.";
+                errEl.classList.remove('hidden');
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
