@@ -14,8 +14,7 @@ instance/
 users.db
 users_v2.db
 
-# Generated presentations and test assets
-*.pptx
+# Test assets
 test_*.png
 
 # Python artifacts
